@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # Traefik Reverse Proxy with Auto SSL
+  traefik:
+    image: traefik:v3.0
+    container_name: primus-traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@primusidp.net}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    networks:
+      - primus-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN:-primusidp.net}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_USERS:-admin:$$apr1$$xyz$$hash}"
+
+  # PostgreSQL with pgvector
+  db:
+    image: ankane/pgvector:latest
+    container_name: primus-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-primus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-primus_secure_password_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-primus_idp}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - primus-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-primus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: primus-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-primus_redis_2024}
+    volumes:
+      - redis-data:/data
+    networks:
+      - primus-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-primus_redis_2024}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./primus_idp_backend
+      dockerfile: Dockerfile
+    container_name: primus-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-primus}:${POSTGRES_PASSWORD:-primus_secure_password_2024}@db:5432/${POSTGRES_DB:-primus_idp}
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-super-secret-key-change-in-production}
+      CORS_ORIGINS: https://${DOMAIN:-primusidp.net},https://www.${DOMAIN:-primusidp.net}
+      ENVIRONMENT: production
+    networks:
+      - primus-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN:-primusidp.net}`)"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker
+  celery:
+    build:
+      context: ./primus_idp_backend
+      dockerfile: Dockerfile
+    container_name: primus-celery
+    restart: always
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-primus}:${POSTGRES_PASSWORD:-primus_secure_password_2024}@db:5432/${POSTGRES_DB:-primus_idp}
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-super-secret-key-change-in-production}
+    networks:
+      - primus-network
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: ./primus_idp_backend
+      dockerfile: Dockerfile
+    container_name: primus-celery-beat
+    restart: always
+    command: celery -A app.celery_app beat --loglevel=info
+    depends_on:
+      - celery
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-primus}:${POSTGRES_PASSWORD:-primus_secure_password_2024}@db:5432/${POSTGRES_DB:-primus_idp}
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-primus_redis_2024}@redis:6379/0
+    networks:
+      - primus-network
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./primus_idp_web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_FASTAPI_BACKEND_URL: https://api.${DOMAIN:-primusidp.net}
+    container_name: primus-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_FASTAPI_BACKEND_URL: https://api.${DOMAIN:-primusidp.net}
+    networks:
+      - primus-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-primusidp.net}`) || Host(`www.${DOMAIN:-primusidp.net}`)"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.frontend.middlewares=www-redirect"
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+      - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+
+volumes:
+  postgres-data:
+  redis-data:
+  traefik-letsencrypt:
+
+networks:
+  primus-network:
+    driver: bridge

@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { DashboardBreadcrumb } from "@/components/dashboard-breadcrumb";
 import { AppSidebarProvider } from "@/components/sidebar/AppSidebarProvider";
@@ -34,26 +34,6 @@ export function DashboardClientLayout({
 
 	// Skip onboarding check if we're already on the onboarding page
 	const isOnboardingPage = pathname?.includes("/onboard");
-
-	// Translate navigation items
-	const tNavMenu = useTranslations('nav_menu');
-	const translatedNavMain = useMemo(() => {
-		return navMain.map((item) => ({
-			...item,
-			title: tNavMenu(item.title.toLowerCase().replace(/ /g, '_')),
-			items: item.items?.map((subItem: any) => ({
-				...subItem,
-				title: tNavMenu(subItem.title.toLowerCase().replace(/ /g, '_')),
-			})),
-		}));
-	}, [navMain, tNavMenu]);
-
-	const translatedNavSecondary = useMemo(() => {
-		return navSecondary.map((item) => ({
-			...item,
-			title: item.title === 'All Search Spaces' ? tNavMenu('all_search_spaces') : item.title,
-		}));
-	}, [navSecondary, tNavMenu]);
 
 	const [open, setOpen] = useState<boolean>(() => {
 		try {
@@ -147,8 +127,8 @@ export function DashboardClientLayout({
 			{/* Use AppSidebarProvider which fetches user, search space, and recent chats */}
 			<AppSidebarProvider
 				searchSpaceId={searchSpaceId}
-				navSecondary={translatedNavSecondary}
-				navMain={translatedNavMain}
+				navSecondary={navSecondary}
+				navMain={navMain}
 			/>
 			<SidebarInset className="bg-[#0f0f11]">
 				<header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-2 bg-[#0f0f11]/95 backdrop-blur-xl border-b border-zinc-800/60">
