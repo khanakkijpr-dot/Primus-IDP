@@ -1,7 +1,7 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "pnpm start"
+# Dockerfile uses CMD ["node", "server.js"] so no startCommand needed
 healthcheckPath = "/"
 healthcheckTimeout = 300

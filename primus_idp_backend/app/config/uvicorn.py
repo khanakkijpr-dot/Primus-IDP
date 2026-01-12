@@ -27,10 +27,13 @@ def load_uvicorn_config(args=None):
     Load Uvicorn configuration from environment variables and CLI args.
     Returns a dict suitable for passing to uvicorn.Config.
     """
+    # Railway uses PORT, but we also support UVICORN_PORT for local development
+    port = int(os.getenv("PORT", os.getenv("UVICORN_PORT", 8000)))
+    
     config_kwargs = {
         "app": "app.app:app",
         "host": os.getenv("UVICORN_HOST", "0.0.0.0"),
-        "port": int(os.getenv("UVICORN_PORT", 8000)),
+        "port": port,
         "log_level": os.getenv("UVICORN_LOG_LEVEL", "info"),
         "reload": args.reload if args else False,
         "reload_dirs": ["app"] if (args and args.reload) else None,
