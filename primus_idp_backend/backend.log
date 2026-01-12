@@ -1,10 +1,1 @@
-Loading default cross-encoder model for language en
-Default Model: mixedbread-ai/mxbai-rerank-base-v1
-Loading TransformerRanker model mixedbread-ai/mxbai-rerank-base-v1 (this message can be suppressed by setting verbose=0)
-No device set
-Using device cuda
-No dtype set
-Using dtype torch.float32
-Loaded model mixedbread-ai/mxbai-rerank-base-v1
-Using device cuda.
-Using dtype torch.float32.
+

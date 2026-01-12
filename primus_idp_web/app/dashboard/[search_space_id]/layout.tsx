@@ -15,12 +15,7 @@ export default function DashboardLayout({
 
 	const customNavSecondary = [
 		{
-			title: `All Workspaces`,
-			url: `#`,
-			icon: "Info",
-		},
-		{
-			title: `All Workspaces`,
+			title: "All Workspaces",
 			url: "/dashboard",
 			icon: "Undo2",
 		},

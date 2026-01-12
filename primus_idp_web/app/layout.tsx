@@ -99,14 +99,14 @@ export default function RootLayout({
 	// Locale state is fixed to English after removal of the language switcher
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={cn(dmSans.variable, jetbrainsMono.variable, "font-sans bg-[#FDFBF7] dark:bg-[#1A1614] antialiased h-full w-full")}>
+			<body className={cn(dmSans.variable, jetbrainsMono.variable, "font-sans bg-background antialiased h-full w-full")}>
 				<LocaleProvider>
 					<I18nProvider>
 						<ThemeProvider
 							attribute="class"
 							enableSystem
 							disableTransitionOnChange
-							defaultTheme="light"
+							defaultTheme="dark"
 						>
 							<RootProvider>
 								{children}

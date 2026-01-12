@@ -9,26 +9,26 @@
 @theme {
 	--font-sans: var(--font-dm-sans);
 	--font-mono: var(--font-jetbrains-mono);
-	
+
 	/* ═══════════════════════════════════════════════════════════════
 	   PRIMUS IDP - ELITE DESIGN SYSTEM
 	   Inspired by: Linear, Vercel, Stripe, Raycast
 	   Modern • Premium • Sophisticated
 	   ═══════════════════════════════════════════════════════════════ */
-	
+
 	/* Primary Gradient: Electric Violet to Cyan */
 	--color-primus-violet-400: #A78BFA;
 	--color-primus-violet-500: #8B5CF6;
 	--color-primus-violet-600: #7C3AED;
-	
+
 	/* Accent: Vibrant Cyan */
 	--color-primus-cyan-400: #22D3EE;
 	--color-primus-cyan-500: #06B6D4;
-	
+
 	/* Success: Neon Green */
 	--color-primus-green-400: #4ADE80;
 	--color-primus-green-500: #22C55E;
-	
+
 	/* Premium Grays */
 	--color-primus-gray-50: #FAFAFA;
 	--color-primus-gray-100: #F4F4F5;
@@ -83,39 +83,39 @@
 
 .dark {
 	/* Dark Mode - Rich & Immersive */
-	--background: #09090B;
+	--background: #0a0a0b;
 	--foreground: #FAFAFA;
-	--card: #18181B;
+	--card: #141416;
 	--card-foreground: #FAFAFA;
-	--popover: #18181B;
+	--popover: #141416;
 	--popover-foreground: #FAFAFA;
 	--primary: #A78BFA;
-	--primary-foreground: #09090B;
-	--secondary: #27272A;
+	--primary-foreground: #0a0a0b;
+	--secondary: #1f1f23;
 	--secondary-foreground: #FAFAFA;
-	--muted: #27272A;
+	--muted: #1f1f23;
 	--muted-foreground: #A1A1AA;
 	--accent: #22D3EE;
-	--accent-foreground: #09090B;
+	--accent-foreground: #0a0a0b;
 	--destructive: #F87171;
-	--destructive-foreground: #09090B;
-	--border: #27272A;
-	--input: #27272A;
+	--destructive-foreground: #0a0a0b;
+	--border: #2a2a2e;
+	--input: #2a2a2e;
 	--ring: #A78BFA;
 	--chart-1: #A78BFA;
 	--chart-2: #22D3EE;
 	--chart-3: #FBBF24;
 	--chart-4: #4ADE80;
 	--chart-5: #F472B6;
-	--sidebar: #09090B;
-	--sidebar-foreground: #FAFAFA;
+	--sidebar: #0a0a0b;
+	--sidebar-foreground: #e4e4e7;
 	--sidebar-primary: #A78BFA;
-	--sidebar-primary-foreground: #09090B;
-	--sidebar-accent: #27272A;
+	--sidebar-primary-foreground: #0a0a0b;
+	--sidebar-accent: #1f1f23;
 	--sidebar-accent-foreground: #A78BFA;
-	--sidebar-border: #27272A;
+	--sidebar-border: #2a2a2e;
 	--sidebar-ring: #A78BFA;
-	--syntax-bg: #18181B;
+	--syntax-bg: #141416;
 }
 
 @theme inline {
@@ -161,40 +161,19 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 		font-feature-settings: "rlig" 1, "calt" 1;
 	}
-	
+
 	/* Glassmorphism Utilities */
 	.glass {
 		@apply bg-zinc-950/70 backdrop-blur-lg border border-white/10;
 	}
-	
+
 	.glass-card {
 		@apply bg-zinc-900/50 backdrop-blur-md border border-white/5 shadow-xl;
-	}
-
-	:root {
-		--sidebar-background: 0 0% 98%;
-		--sidebar-foreground: 240 5.3% 26.1%;
-		--sidebar-primary: 262 83% 58%;
-		--sidebar-primary-foreground: 0 0% 98%;
-		--sidebar-accent: 240 4.8% 95.9%;
-		--sidebar-accent-foreground: 240 5.9% 10%;
-		--sidebar-border: 220 13% 91%;
-		--sidebar-ring: 262 83% 58%;
-	}
-
-	.dark {
-		--sidebar-background: 240 5.9% 10%;
-		--sidebar-foreground: 240 4.8% 95.9%;
-		--sidebar-primary: 262 83% 58%;
-		--sidebar-primary-foreground: 0 0% 100%;
-		--sidebar-accent: 240 3.7% 15.9%;
-		--sidebar-accent-foreground: 240 4.8% 95.9%;
-		--sidebar-border: 240 3.7% 15.9%;
-		--sidebar-ring: 262 83% 58%;
 	}
 }
 
